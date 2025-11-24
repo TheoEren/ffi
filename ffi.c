@@ -1,8 +1,4 @@
 #ifdef _WIN32
-#ifdef __APPLE__
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <io.h>
@@ -24,6 +20,10 @@
 #include <string.h>
 #include <stdint.h>
 #include <ctype.h>
+#ifdef __APPLE__
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -285,18 +285,16 @@ static void usage(const char *n){
 }
 
 int main(int argc, char **argv){
-#ifdef _WIN32
-    SYSTEM_INFO si; GetSystemInfo(&si);
-    thread_count = si.dwNumberOfProcessors;
-#else
-    long nc = sysconf(_SC_NPROCESSORS_ONLN);
-    thread_count = (nc > 0) ? (int)nc : 4;
-#endif
+#ifndef _WIN32
+int nc = 4;
 #ifdef __APPLE__
-    int nc;
-    size_t size = sizeof(nc);
-    if(sysctlbyname("hw.ncpu", &nc, &size, NULL, 0) != 0) nc = 4;
-    thread_count = nc;
+size_t size = sizeof(nc);
+if(sysctlbyname("hw.ncpu", &nc, &size, NULL, 0) != 0) nc = 4;
+#else
+long ln = sysconf(_SC_NPROCESSORS_ONLN);
+if(ln > 0) nc = (int)ln;
+#endif
+thread_count = nc;
 #endif
     for(int i=1;i<argc;i++){
         if(!strcmp(argv[i],"-p") && i+1<argc) start_path = argv[++i];
