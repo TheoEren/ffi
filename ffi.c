@@ -1,4 +1,8 @@
 #ifdef _WIN32
+#ifdef __APPLE__
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <io.h>
@@ -287,6 +291,12 @@ int main(int argc, char **argv){
 #else
     long nc = sysconf(_SC_NPROCESSORS_ONLN);
     thread_count = (nc > 0) ? (int)nc : 4;
+#endif
+#ifdef __APPLE__
+    int nc;
+    size_t size = sizeof(nc);
+    if(sysctlbyname("hw.ncpu", &nc, &size, NULL, 0) != 0) nc = 4;
+    thread_count = nc;
 #endif
     for(int i=1;i<argc;i++){
         if(!strcmp(argv[i],"-p") && i+1<argc) start_path = argv[++i];
