@@ -64,4 +64,3 @@ Download the appropriate binary for your operating system and extract it to use 
 ## License
 
 This project is licensed under the MIT License.
-```
